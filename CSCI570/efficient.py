@@ -1,11 +1,17 @@
+# Python Modules
+
 from time import process_time
 import timeit
 import sys
-from basic import sequence_alignment
-from extractInput import generateStrings
 import tracemalloc
 
+# Custom Modules
+from basic import sequence_alignment
+from extractInput import generateStrings
+
+
 # Global Variables
+# Mismatch Penalty matrix created using mismatch penalty values given
 mismatch_penalty = {'AA': 0, 'AC':110, 'CA': 110, 
                     'AG': 48, 'GA': 48, 'CC':0, 
                     'AT': 94, 'TA': 94, 'CG':118, 
@@ -13,77 +19,132 @@ mismatch_penalty = {'AA': 0, 'AC':110, 'CA': 110,
                     'GT':110, 'TT':0, 'CT': 48, 
                     'TC':48}
 
+# Gap_Penalty
+# default value = 30
 gap_penalty = 30
 
-def prefix(str1, str2):
-    n, m = len(str1), len(str2)
-    # mat = [[0 for i in range(2)] for j in range(n + 1)]
-    dp_prefix = [[0 for idx1 in range(m + 1)] for idx2 in range(2)]
-    #initialize the base cases 
-    for idx1 in range(m + 1):
+def get_prefix(str1, str2):
+
+    # Retrieving length of the strings 
+    str1_length, str2_length = len(str1), len(str2)
+    
+    # Creating a 2D prefix DP table of size (str2_length + 1) * 2
+    dp_prefix = [[0 for idx1 in range(str2_length + 1)] for idx2 in range(2)]
+    
+    #Intialization of Base Case
+    # Intializing First Row i.e. dp_prefix[0][0...(str2_length + 1)] = idx * gap_penalty
+    for idx1 in range(str2_length + 1):
         dp_prefix[0][idx1] = idx1 * gap_penalty
     
-    # update the matrix in row order 
-    for idx1 in range(1, n + 1):
+    # Filling the DP table dp_prefix
+    # Row-wise 
+    for idx1 in range(1, str1_length + 1):
         dp_prefix[1][0] = dp_prefix[0][0] + gap_penalty
-        for idx2 in range(1, m + 1):
+        for idx2 in range(1, str2_length + 1):
+            # Taking the minimum value of the three
+            # Using Needleman-Wunsch Algorithm
             dp_prefix[1][idx2] = min(dp_prefix[0][idx2 - 1] + mismatch_penalty[str1[idx1 - 1] + str2[idx2 - 1]],
                             dp_prefix[0][idx2] + gap_penalty,
                             dp_prefix[1][idx2 - 1] + gap_penalty)
         
-        for idx in range(0, m + 1):
+        # Copying row 1 to row 0
+        for idx in range(0, str2_length + 1):
             dp_prefix[0][idx] = dp_prefix[1][idx]
     
+
     return dp_prefix[1]
 
-def suffix(str1, str2):
-    n, m = len(str1), len(str2)
-    # mat = [[0 for i in range(2)] for j in range(n + 1)]
-    dp_suffix = [[0 for idx1 in range(m + 1)] for idx2 in range(2)]
+def get_suffix(str1, str2):
+
+    # Retrieving length of the strings 
+    str1_length, str2_length = len(str1), len(str2)
     
-    #initialize the base cases 
-    for idx1 in range(m + 1):
+    # Creating a 2D suffix DP table of size (str2_length + 1) * 2
+    dp_suffix = [[0 for idx1 in range(str2_length + 1)] for idx2 in range(2)]
+    
+    #Intialization of Base Case
+    # Intializing First Row i.e. dp_suffix[0][0...(str2_length + 1)] = idx * gap_penalty
+    for idx1 in range(str2_length + 1):
         dp_suffix[0][idx1] = idx1 * gap_penalty
     
-    #update the matrix in row order 
-    for idx1 in range(1, n + 1):
+    # Filling the DP table dp_suffix
+    # Row-wise 
+    for idx1 in range(1, str1_length + 1):
         dp_suffix[1][0] = dp_suffix[0][0] + gap_penalty
-        for idx2 in range(1, m+1):
-            dp_suffix[1][idx2] = min(dp_suffix[0][idx2 - 1] + mismatch_penalty[str1[n - idx1] + str2[m - idx2]],
+        for idx2 in range(1, str2_length+1):
+            # Taking the minimum value of the three
+            # Using Needleman-Wunsch Algorithm
+            dp_suffix[1][idx2] = min(dp_suffix[0][idx2 - 1] + mismatch_penalty[str1[str1_length - idx1] + str2[str2_length - idx2]],
                             dp_suffix[0][idx2] + gap_penalty,
                             dp_suffix[1][idx2 - 1] + gap_penalty)
         
-        for idx in range(0, m + 1):
+        # Copying row 1 to row 0
+        for idx in range(0, str2_length + 1):
             dp_suffix[0][idx] = dp_suffix[1][idx]
     
     return dp_suffix[1]
 
 
 
-def space_efficient_alignment(str1, str2):
-    # This is the main space_efficient_alignment routine.
-    n, m = len(str1), len(str2)
-    if n<2 or m<2:
-        # In this case we just use the N-W algorithm.
-        # return nw(str1, str2, alphEnum)
-        return sequence_alignment(str1, str2)
+def memory_efficient_sequence_alignment(str1, str2):
+    
+    """
+    Performs the Memory Efficient Divide & Conquer based Sequence Alignment
+    alogrithm based on the Needleman-Wunsch Algorithm
 
+    Args: 
+        str1 (str): String sequence - 1 
+        str2 (str): String sequence - 2
+
+    Returns:
+        list: Returns the list of three objects -> 1. Alignment of string 1 
+                                                    2. Alignment of string 2
+                                                    3. Similarity Cost
+    """
+
+    # Retrieving length of the strings 
+    str1_length, str2_length = len(str1), len(str2)
+
+    # Here as we use the divide & conquer method to make memory efficient algorithm
+    # length of both of the strings serves as a base case for our recrusion
+    # If we reach to a certain minimum length (here being 2) we call the normal sequence_alignment algorithm
+    if str1_length < 2 or str2_length<2:
+        # Returns the output of the sequence_alignment function
+        return sequence_alignment(str1, str2)
+    
+    # If the string length exceeds our base case value we perform Divide operation 
+    # to divide the strings into 2 halves
     else:
-        # Make partitions, call subroutines.
-        # F, B = forwards(str1[:n//2], str2, alphEnum), backwards(str1[n//2:], str2, alphEnum)
-        # F, B = forwards(str1[:n//2], str2, alphEnum), backwards(str1[n//2:], str2, alphEnum)
-        F, B = prefix(str1[:n//2], str2), suffix(str1[n//2:], str2)
-        # assert(E == F)
-        # assert(A == B)
-        partition = [F[j] + B[m-j] for j in range(m+1)]
-        cut = partition.index(min(partition))
-        # Clear all memory now, so that we don't store data during recursive calls.
-        F, B, partition = [], [], []
-        # Now make recursive calls.
-        callLeft = space_efficient_alignment(str1[:n//2], str2[:cut])
-        callRight = space_efficient_alignment(str1[n//2:], str2[cut:])
-        # Now return result in format: [1st alignment, 2nd alignment, similarity]
-        return [callLeft[r] + callRight[r] for r in range(3)]
+        # Calling get_prefix function on two halves of the big sequence Str1
+        # Prefix string for (0....str1_length // 2)
+        prefix = get_prefix(str1[:str1_length // 2], str2)
+        # suffix string for (str1_length // 2.....) 
+        suffix = get_suffix(str1[str1_length // 2:], str2)
+        
+        # prefix and suffix have the forward and backward sequence strings as explained in lecture
+        partition_matrix = [prefix[idx] + suffix[str2_length - idx] for idx in range(str2_length + 1)]
+        partition_min = min(partition_matrix)
+        partition_idx = partition_matrix.index(partition_min)
+
+        # Dumping all the temporary variables 
+        # Helps in reducing Memory Usage
+        prefix = []
+        suffix = []
+        partition = []
+
+        # Recursive exceution of the above steps completing the Conquering Step
+        
+        # Recrusively perform for the First Half
+        firstHalf = memory_efficient_sequence_alignment(str1[:str1_length // 2], str2[:partition_idx])
+        
+        # Recrusively perform for the Second Half
+        secondHalf = memory_efficient_sequence_alignment(str1[str1_length // 2:], str2[partition_idx:])
+        
+        # Performing the simple Combine Step (i.e. Concatenating the result of the Two halfs)
+        # 1. sequence 1 of firstHalf + sequence 1 of secondHalf
+        # 2. sequence 2 of firstHalf + sequence 2 of secondHalf
+        # 3. similarity cost of firstHalf + similarity cost of secondHalf
+        return [firstHalf[r] + secondHalf[r] for r in range(3)]
 
 
 
@@ -106,7 +167,7 @@ if __name__ == "__main__":
         # problem_size.append(len(str1)+len(str2))
 
         t_start=process_time()
-        result =  space_efficient_alignment(str1, str2)
+        result =  memory_efficient_sequence_alignment(str1, str2)
         # print(result)
         t_end=process_time()
         current, peak = tracemalloc.get_traced_memory()
