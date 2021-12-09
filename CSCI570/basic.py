@@ -140,6 +140,19 @@ def sequence_alignment(str1, str2):
     # 3. Similarity cost stored at the bottom-right cell of the dp_table.
     return [aligned_str1, aligned_str2, dp_table[str1_length][str2_length]]
 
+def first50last50(s):
+    if len(s) > 50 and len(s)<100:
+        x = s[:51]
+        y = s[51:]
+    elif  len(s)>100:
+        x = s[:51]
+        y = s[-51:]
+    else:
+        x = s
+        y = ""
+    return x+" "+y
+
+
 if __name__ == "__main__":
    
     if len(sys.argv) > 1:
@@ -147,35 +160,32 @@ if __name__ == "__main__":
     else: 
         filename = 'input1.txt'
 
-    # cpu_time_basic = []
-    # memory_usage_basic = []
 
-    for i in range(1,8):
-        filename = 'input'+str(i)+'.txt'
+    tracemalloc.start()
+    t_start=process_time()
 
-        tracemalloc.start()
-        str1, str2 = generateStrings(filename)
-        t_start=process_time()
-        result =  sequence_alignment(str1, str2)
-        # print(result)
+    str1, str2 = generateStrings(filename)
+    result =  sequence_alignment(str1, str2)
 
-        t_end=process_time()
-        current, peak = tracemalloc.get_traced_memory()
-        # memory_usage_basic.append(peak)
-        print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
-        tracemalloc.stop()
+    t_end=process_time()
+    cpu_time = t_end-t_start
 
-        print("Alignment of A: ", result[0])
-        print("Alignment of B: ", result[1])
-        print("Similarity score: ", result[2], '\n')
-        # cpu_time_basic.append(t_end-t_start)
-        print(t_end-t_start)
-    # print(time.process_time())
-    # print(cpu_time_basic)
-    # print(memory_usage_basic)
+    current, peak = tracemalloc.get_traced_memory()
+    memory = peak
+    # print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+    tracemalloc.stop()
+
+    line0 = first50last50(result[0])
+    line1 = first50last50(result[1])
+    line2= str(result[2])
+    line3 = str(cpu_time)
+    line4 = str(memory)
+
     # print("Alignment of A: ", result[0])
     # print("Alignment of B: ", result[1])
     # print("Similarity score: ", result[2], '\n')
-    # write_file(result[0], result[1], result[2], runtime, memory_used)
-    # print(timeit.timeit('SequenceAlignment(s1, s2)', setup=""))
-    # runtime()
+    # print(t_end-t_start)
+
+    f = open("output.txt", "w")
+    f.write( line0 + "\n" + line1 + "\n" + line2 + "\n" + line3 + "\n" + line4 + "\n")
+    f.close()

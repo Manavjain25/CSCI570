@@ -185,18 +185,12 @@ if __name__ == "__main__":
     line3 = str(cpu_time)
     line4 = str(memory)
 
-    print("Alignment of A: ", result[0])
-    print("Alignment of B: ", result[1])
-    print("Similarity score: ", result[2], '\n')
-    print(t_end-t_start)
-        # cpu_time_efficient.append(t_end-t_start)
+    # print("Alignment of A: ", result[0])
+    # print("Alignment of B: ", result[1])
+    # print("Similarity score: ", result[2], '\n')
+    # print(t_end-t_start)
 
-    # print(problem_size)
-    # print(cpu_time_efficient)
-    # print(memory_usage_efficient)
-    # print()
     f = open("output.txt", "w")
     f.write( line0 + "\n" + line1 + "\n" + line2 + "\n" + line3 + "\n" + line4 + "\n")
     f.close()
-    # print(timeit.timeit('sequence_alignment(s1, s2)', setup=""))
-    # runtime()
+ 
