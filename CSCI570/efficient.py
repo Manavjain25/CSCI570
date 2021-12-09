@@ -146,7 +146,17 @@ def memory_efficient_sequence_alignment(str1, str2):
         # 3. similarity cost of firstHalf + similarity cost of secondHalf
         return [firstHalf[r] + secondHalf[r] for r in range(3)]
 
-
+def first50last50(s):
+    if len(s) > 50 and len(s)<100:
+        x = s[:51]
+        y = s[51:]
+    elif  len(s)>100:
+        x = s[:51]
+        y = s[-51:]
+    else:
+        x = s
+        y = ""
+    return x+" "+y
 
 if __name__ == "__main__":
    
@@ -154,37 +164,39 @@ if __name__ == "__main__":
         filename = sys.argv[1]
     else: 
         filename = 'input1.txt'
+
+    t_start=process_time()
+    tracemalloc.start()
+    str1, str2 = generateStrings(filename)
+
     
-    # problem_size = []
-    # cpu_time_efficient = []
-    # memory_usage_efficient = []
+    result =  memory_efficient_sequence_alignment(str1, str2)
 
-    for i in range(1,8):
-        filename = 'input'+str(i)+'.txt'
+    t_end=process_time()
+    cpu_time = t_end-t_start
+    current, peak = tracemalloc.get_traced_memory()
+    memory = peak
+    # print(f"Peak was {peak / 10**3}KB")
+    tracemalloc.stop()
+    
+    line0 = first50last50(result[0])
+    line1 = first50last50(result[1])
+    line2= str(result[2])
+    line3 = str(cpu_time)
+    line4 = str(memory)
 
-        tracemalloc.start()
-        str1, str2 = generateStrings(filename)
-        # problem_size.append(len(str1)+len(str2))
-
-        t_start=process_time()
-        result =  memory_efficient_sequence_alignment(str1, str2)
-        # print(result)
-        t_end=process_time()
-        current, peak = tracemalloc.get_traced_memory()
-        # memory_usage_efficient.append(peak)
-        print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
-        tracemalloc.stop()
-
-        print("Alignment of A: ", result[0])
-        print("Alignment of B: ", result[1])
-        print("Similarity score: ", result[2], '\n')
-        print(t_end-t_start)
+    print("Alignment of A: ", result[0])
+    print("Alignment of B: ", result[1])
+    print("Similarity score: ", result[2], '\n')
+    print(t_end-t_start)
         # cpu_time_efficient.append(t_end-t_start)
 
     # print(problem_size)
     # print(cpu_time_efficient)
     # print(memory_usage_efficient)
     # print()
-    # write_file(result[0], result[1], result[2], runtime, memory_used)
+    f = open("output.txt", "w")
+    f.write( line0 + "\n" + line1 + "\n" + line2 + "\n" + line3 + "\n" + line4 + "\n")
+    f.close()
     # print(timeit.timeit('sequence_alignment(s1, s2)', setup=""))
     # runtime()
